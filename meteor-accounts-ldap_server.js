@@ -418,6 +418,7 @@ Accounts.registerLoginHandler("ldap", function (request) {
   }
   else{
     LDAP.log("User was not found in database, and autoCreate is disabled.");
+    throw new Meteor.Error("Could not find an existing user with supplied username", "user has not been created in tuapath", "userDoesNotExist");
   }
 
   if (settings.autopublishFields) {
