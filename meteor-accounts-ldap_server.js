@@ -112,6 +112,7 @@ LDAP._bind = function (client, username, password, email, request, settings) {
   var success = null;
   //Bind our LDAP client.
   var serverDNs = (typeof (settings.serverDn) == 'string') ? [settings.serverDn] : settings.serverDn;
+  var searchDNs = (typeof (settings.searchDn) == 'string') ? [settings.searchDn] : settings.searchDn;
   for (var k in serverDNs) {
     var serverDn = serverDNs[k].split(/,?DC=/).slice(1).join('.');
     var userDn = (email) ? username : username + '@' + serverDn;
@@ -119,9 +120,7 @@ LDAP._bind = function (client, username, password, email, request, settings) {
 
     //*********Truby added this*****************//
     //Truby added this, and got it working.
-    //userDn='cn=read-only-admin,dc=example,dc=com';
-    //userDn='uid=gauss,dc=example,dc=com';
-    userDn = 'uid=' + username + "," + serverDNs;
+    userDn = searchDNs + '=' + username + ',' + serverDNs;
     LDAP.log('Bind to: ' + userDn);
     //******************************************//
 
@@ -157,6 +156,7 @@ LDAP._search = function (client, searchUsername, isEmail, request, settings) {
     timeLimit: 2
   };
   var serverDNs = (typeof(settings.serverDn) == 'string') ? [settings.serverDn] : settings.serverDn;
+  var searchDNs = (typeof (settings.searchDn) == 'string') ? [settings.searchDn] : settings.searchDn;
   var result = false;
   for (var k in serverDNs) {
     var searchFuture = new Future();
@@ -164,12 +164,10 @@ LDAP._search = function (client, searchUsername, isEmail, request, settings) {
     LDAP.log ('Searching ' + serverDn);
 
     //*********Truby added this*****************//
-    //serverDn='uid=gauss,dc=example,dc=com';
-    serverDn = 'uid=' + searchUsername + ',' + serverDNs;
+    serverDn = searchDNs +  '=' + searchUsername  + ',' + serverDNs;
     LDAP.log('Search: ' + serverDn);
     //******************************************//
 
-    //client.search(serverDn, opts, function(err, res) {
     client.search(serverDn, {}, function(err, res) {    //Note: Truby took out the opts, becuase sending in an empty options is practicaly a get... see http://ldapjs.org/client.html under search
       userObj = {};
       if (err) {
@@ -333,17 +331,6 @@ Accounts.registerLoginHandler("ldap", function (request) {
   else {
     condition.username = username;
   }
-
-  //*********Truby REMOVED this*****************//
-  // If we have two users with the same username, or two users with the same email address, we have a problem
-  // For situations like this, we might want to modify the condition to include extra fields
-  // Possibly based on request.data passed from the client
-  /*
-   var ldapIdentifier = request.data[LDAP.multitenantIdentifier] + '-' + userObj.username
-   condition = (LDAP.multitenantIdentifier && request.data && request.data[LDAP.multitenantIdentifier]) ? {ldapIdentifier: ldapIdentifier} : LDAP.modifyCondition.call(request, condition);
-   var user = Meteor.users.findOne(condition);
-   */
-  //******************************************//
 
   //*********Truby added this*****************//
   var user = Meteor.users.findOne({'username': username});
