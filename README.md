@@ -10,6 +10,7 @@ Please see link above for most details, the few items this package has changed i
 
 "ldap": {
   "autoCreateUser": false,
+  "tryDBFirst": false,
   "searchDn": "uid",
   "serverDn": "DC=example,DC=com",
   "serverUrl": "ldap://ldap.forumsys.com:389",

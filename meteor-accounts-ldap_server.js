@@ -18,10 +18,6 @@ LDAP.filter = function (email, username) {
   return '(&(' + ((email) ? 'mail' : 'cn') + '=' + username + ')(objectClass=user))';
 }
 
-// Flag to tell the loginHandler to have a poke at the app database first
-// (will only work if accounts-password package is present)
-LDAP.tryDBFirst = false;
-
 LDAP.addFields = function (entry) {
   // `this` is the request from the client
   // `entry` is the object returned from the LDAP server
@@ -230,6 +226,10 @@ Accounts.registerLoginHandler("ldap", function (request) {
   if (!request.ldap) {
     return;
   }
+  var settings = LDAP._settings(request);
+  if (!settings) {
+    throw new Error("LDAP settings missing.");
+  }
   if (LDAP.multitenantIdentifier && !(request.data && request.data[LDAP.multitenantIdentifier])) {
     LDAP.log('You need to set "' + LDAP.multitenantIdentifier + '" on the client using LDAP.data for multi-tenant support to work.');
     return;
@@ -241,7 +241,12 @@ Accounts.registerLoginHandler("ldap", function (request) {
     // It's an email
     var email = true;
   }
-  if (!!Package["accounts-password"] && LDAP.tryDBFirst) {
+
+  // Flag to tell the loginHandler to have a poke at the app database first
+  // (will only work if accounts-password package is present)
+  var tryDBFirst = (typeof(settings.tryDBFirst) == 'boolean') ? settings.tryDBFirst : false;  //defualt to false
+  LDAP.log("tryDBFirst: " + tryDBFirst);
+  if (!!Package["accounts-password"] && tryDBFirst) {
     // This is a blunt instrument and not up to MDG standard
     // see: https://github.com/meteor/meteor/blob/devel/packages/accounts-password/password_server.js
     // for a complete implementation
@@ -278,10 +283,7 @@ Accounts.registerLoginHandler("ldap", function (request) {
     }
   }
   request.password = request.pwd; // Dodging the Accounts.loginWithPassword check
-  var settings = LDAP._settings(request);
-  if (!settings) {
-    throw new Error("LDAP settings missing.");
-  }
+
   if (settings.debugMode === true) {
     userObj = {username: actualUsername};
     person = {};
@@ -335,6 +337,7 @@ Accounts.registerLoginHandler("ldap", function (request) {
   //*********Truby added this*****************//
   var user = Meteor.users.findOne({'username': username});
   var bAutoCreateUser = (typeof(settings.autoCreateUser) == 'boolean') ? settings.autoCreateUser : false;  //defualt to false
+
   LDAP.log("Auto Create User Flag: " + bAutoCreateUser);
   //******************************************//
   if (user) {
