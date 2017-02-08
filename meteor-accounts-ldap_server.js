@@ -110,13 +110,14 @@ LDAP._bind = function (client, username, password, email, request, settings) {
   var serverDNs = (typeof (settings.serverDn) == 'string') ? [settings.serverDn] : settings.serverDn;
   var searchDNs = (typeof (settings.searchDn) == 'string') ? [settings.searchDn] : settings.searchDn;
   for (var k in serverDNs) {
-    var serverDn = serverDNs[k].split(/,?DC=/).slice(1).join('.');
-    var userDn = (email) ? username : username + '@' + serverDn;
-    LDAP.log ('Trying to bind ' + userDn + '...');
+    //var serverDn = serverDNs[k].split(/,?DC=/).slice(1).join('.');
+    //var userDn = (email) ? username : username + '@' + serverDn;
+    LDAP.log ('serverDNs length: ' + serverDNs.length);
+    LDAP.log ('serverDNs ' + k + " is " + serverDNs[k]);
 
     //*********Truby added this*****************//
     //Truby added this, and got it working.
-    userDn = searchDNs + '=' + username + ',' + serverDNs;
+    var userDn = searchDNs + '=' + username + ',' + serverDNs[k];
     LDAP.log('Bind to: ' + userDn);
     //******************************************//
 
@@ -157,10 +158,10 @@ LDAP._search = function (client, searchUsername, isEmail, request, settings) {
   for (var k in serverDNs) {
     var searchFuture = new Future();
     var serverDn = serverDNs[k];
-    LDAP.log ('Searching ' + serverDn);
+    LDAP.log ('Searching: ' + serverDNs[k]);
 
     //*********Truby added this*****************//
-    serverDn = searchDNs +  '=' + searchUsername  + ',' + serverDNs;
+    serverDn = searchDNs +  '=' + searchUsername  + ',' + serverDNs[k];
     LDAP.log('Search: ' + serverDn);
     //******************************************//
 

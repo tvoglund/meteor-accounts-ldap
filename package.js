@@ -1,7 +1,7 @@
 Package.describe({
   name : 'tvoglund:meteor-accounts-ldap',
   summary: 'Meteor account login via LDAP',
-  version: '0.0.20',
+  version: '0.0.21',
   git : 'https://github.com/tvoglund/meteor-accounts-ldap',
   documentation: 'README.md'
 });
